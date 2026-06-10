@@ -8,6 +8,7 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import UserProfile from './pages/UserProfile';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         <Route element={<Layout />}>
           <Route path="projects" element={<ProjectFeed />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
+          <Route path="users/:username" element={<UserProfile />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="signin" element={<SignIn />} />
           <Route path="signup" element={<SignUp />} />

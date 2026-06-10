@@ -1,139 +1,172 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, ChevronLeft, ChevronRight, Clock, Star, TrendingUp, Code, User } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown, MessageSquare, Clock, User, TrendingUp, Flame, Sparkles } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import api from '../lib/api';
 
-const MOCK_PROJECTS = [
-  {
-    id: '1',
-    title: 'TriSangum Labs Core',
-    description: 'An open-source collaboration platform for builders. Looking for React and FastAPI developers.',
-    type: 'open_source',
-    timestamp: '2 hours ago',
-    tags: ['React', 'FastAPI', 'Tailwind'],
-    lookingFor: ['Frontend', 'Backend'],
-    author: 'Aakriti Team',
-  },
-  {
-    id: '2',
-    title: 'Neural Network Visualizer',
-    description: 'A visual tool to understand how neural networks learn and adapt. We need UI designers.',
-    type: 'freelance',
-    timestamp: '5 hours ago',
-    tags: ['Python', 'Three.js'],
-    lookingFor: ['UI/UX', '3D Graphics'],
-    author: 'Yantrit Dev',
+const fetchProjects = async ({ queryKey }) => {
+  const [, { search, sort }] = queryKey;
+  const sortMap = { 'Top': 'trending', 'New': 'latest', 'Trending': 'month' };
+  try {
+    const { data } = await api.get('/api/v1/projects', {
+      params: { search: search || undefined, sort: sortMap[sort] || 'latest' }
+    });
+    return data.projects || [];
+  } catch (error) {
+    console.warn("Backend unreachable, returning empty projects.");
+    return [];
   }
+};
+
+const TABS = [
+  { id: 'Top', icon: Flame, label: 'Top' },
+  { id: 'New', icon: Sparkles, label: 'New' },
+  { id: 'Trending', icon: TrendingUp, label: 'Trending' },
 ];
 
+function timeAgo(dateStr) {
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString();
+}
+
 export default function ProjectFeed() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeFilter, setActiveFilter] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('New');
+
+  const { data: projects = [], isLoading } = useQuery({
+    queryKey: ['projects', { search: searchQuery, sort: activeTab }],
+    queryFn: fetchProjects,
+  });
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
-      {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-[220px]' : 'w-[56px]'} border-r border-gray-200 bg-white transition-all duration-300 flex flex-col hidden sm:flex`}>
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-          {sidebarOpen && <span className="font-semibold text-gray-900">Filters</span>}
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1 hover:bg-gray-100 rounded-pill text-gray-500">
-            {sidebarOpen ? <ChevronLeft className="h-5 w-5" /> : <Filter className="h-5 w-5" />}
-          </button>
+    <div className="min-h-[calc(100vh-5rem)] bg-background-light">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-display font-bold text-gray-900 tracking-tight mb-1">Projects</h1>
+          <p className="text-gray-500 text-sm">Discover what people are building, or post your own.</p>
         </div>
-        <div className="p-2 flex-grow overflow-y-auto">
-          {['All', 'Open Source', 'Hiring', 'Closed', 'Freelance'].map(filter => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`w-full text-left px-3 py-2 rounded-card mb-1 flex items-center gap-3 ${activeFilter === filter ? 'bg-accent-blue/10 text-accent-blue font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
-            >
-              <Code className="h-4 w-4 shrink-0" />
-              {sidebarOpen && <span>{filter}</span>}
-            </button>
-          ))}
+
+        {/* Search */}
+        <div className="relative mb-6">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input 
+            type="text" 
+            placeholder="Search projects..." 
+            className="w-full pl-11 pr-4 py-2.5 rounded-full bg-white ring-1 ring-gray-200 focus:ring-2 focus:ring-logo-blue/30 outline-none text-sm placeholder:text-gray-400 transition-all"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
-      </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-6 bg-background-light">
-        <div className="max-w-7xl mx-auto">
-          {/* Header & Controls */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <h1 className="text-3xl font-display font-bold text-gray-900">Project Feed</h1>
-            <div className="flex gap-4 w-full sm:w-auto">
-              <div className="relative flex-1 sm:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input type="text" placeholder="Search projects..." className="input-field pl-10" />
-              </div>
-              <select className="input-field w-auto py-2">
-                <option>Latest</option>
-                <option>Trending</option>
-                <option>This Month</option>
-              </select>
-            </div>
-          </div>
+        {/* Tabs */}
+        <div className="flex items-center gap-1 border-b border-gray-200 mb-6">
+          {TABS.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === tab.id
+                    ? 'border-logo-blue text-logo-blue'
+                    : 'border-transparent text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
 
-          {/* Trending Tags */}
-          <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
-            <span className="text-sm font-semibold text-gray-500 flex items-center mr-2"><TrendingUp className="h-4 w-4 mr-1"/> Trending:</span>
-            {['React', 'AI', 'FastAPI', 'Rust', 'Design'].map(tag => (
-              <span key={tag} className="px-3 py-1 bg-white border border-gray-200 rounded-pill text-sm text-gray-600 whitespace-nowrap cursor-pointer hover:border-accent-blue hover:text-accent-blue transition-colors">
-                #{tag}
-              </span>
-            ))}
-          </div>
-
-          {/* Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MOCK_PROJECTS.map(project => (
-              <div key={project.id} className="card group relative flex flex-col hover:shadow-md transition-shadow">
-                <div className="p-6 flex-grow">
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="badge bg-blue-100 text-blue-700 uppercase tracking-wider">{project.type.replace('_', ' ')}</span>
-                    <span className="flex items-center text-xs text-gray-500"><Clock className="h-3 w-3 mr-1" /> {project.timestamp}</span>
-                  </div>
-                  <h3 className="text-xl font-display font-bold mb-2 text-gray-900 line-clamp-1">{project.title}</h3>
-                  <p className="text-gray-600 text-sm line-clamp-3 mb-4">{project.description}</p>
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {project.tags.map(tag => (
-                      <span key={tag} className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-pill">#{tag}</span>
-                    ))}
+        {/* Feed */}
+        {isLoading ? (
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex gap-4 p-4">
+                <div className="w-10 flex flex-col items-center gap-1">
+                  <div className="skeleton w-6 h-4" />
+                  <div className="skeleton w-8 h-5" />
+                  <div className="skeleton w-6 h-4" />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div className="skeleton h-5 w-3/4" />
+                  <div className="skeleton h-4 w-full" />
+                  <div className="flex gap-2">
+                    <div className="skeleton h-5 w-16 rounded-full" />
+                    <div className="skeleton h-5 w-16 rounded-full" />
                   </div>
                 </div>
+              </div>
+            ))}
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="text-center py-20 border border-dashed border-gray-300 rounded-xl">
+            <p className="text-gray-500 text-sm">No projects found. Try a different search or filter.</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl ring-1 ring-gray-200 divide-y divide-gray-100 overflow-hidden">
+            {projects.map((project, i) => (
+              <div key={project.id} className="flex items-start gap-4 p-4 hover:bg-gray-50/50 transition-colors group">
                 
-                <div className="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between mt-auto">
-                  <div className="flex items-center text-sm font-medium text-gray-900">
-                    <User className="h-4 w-4 mr-2 text-gray-400" />
-                    {project.author}
-                  </div>
+                {/* Vote column */}
+                <div className="flex flex-col items-center gap-0.5 pt-0.5 shrink-0 w-10">
+                  <button className="p-0.5 text-gray-400 hover:text-logo-blue transition-colors rounded">
+                    <ChevronUp className="h-5 w-5" />
+                  </button>
+                  <span className="text-sm font-bold text-gray-900 tabular-nums">{project.upvote_count || 0}</span>
+                  <button className="p-0.5 text-gray-400 hover:text-red-500 transition-colors rounded">
+                    <ChevronDown className="h-5 w-5" />
+                  </button>
                 </div>
 
-                {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-white/95 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-center items-center p-6 text-center z-10 rounded-card">
-                  <h4 className="font-semibold text-gray-900 mb-3">Looking for:</h4>
-                  <div className="flex flex-wrap justify-center gap-2 mb-6">
-                    {project.lookingFor.map(skill => (
-                      <span key={skill} className="px-3 py-1 bg-amber-100 text-amber-800 rounded-pill text-sm font-medium">{skill}</span>
-                    ))}
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-logo-blue bg-logo-blue/5 px-2 py-0.5 rounded-full ring-1 ring-logo-blue/10">
+                      {(project.type || 'open_source').replace('_', ' ')}
+                    </span>
+                    {project.category && (
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        {project.category}
+                      </span>
+                    )}
                   </div>
-                  <div className="flex gap-3 w-full">
-                    <Link to={`/projects/${project.id}`} className="btn-secondary flex-1 py-2">View</Link>
-                    <button className="btn-primary flex-1 py-2">Contribute</button>
+
+                  <Link to={`/projects/${project.id}`} className="block">
+                    <h3 className="font-bold text-gray-900 text-base leading-snug mb-1 group-hover:text-logo-blue transition-colors">
+                      {project.title}
+                    </h3>
+                  </Link>
+
+                  <p className="text-sm text-gray-500 line-clamp-1 mb-2 leading-relaxed">{project.description}</p>
+
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">
+                    {(project.tags || []).slice(0, 4).map(tag => (
+                      <span key={tag} className="text-gray-500">#{tag}</span>
+                    ))}
+                    <span className="flex items-center gap-1">
+                      <MessageSquare className="h-3 w-3" /> {project.comment_count || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" /> {timeAgo(project.created_at)}
+                    </span>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-          
-          {/* Pagination */}
-          <div className="mt-12 flex justify-center items-center gap-2">
-            <button className="p-2 border border-gray-300 rounded-pill text-gray-500 hover:bg-gray-50" disabled><ChevronLeft className="h-5 w-5" /></button>
-            <button className="w-10 h-10 border border-accent-blue bg-accent-blue/10 text-accent-blue rounded-pill font-medium">1</button>
-            <button className="w-10 h-10 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-pill font-medium">2</button>
-            <button className="w-10 h-10 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-pill font-medium">3</button>
-            <button className="p-2 border border-gray-300 rounded-pill text-gray-500 hover:bg-gray-50"><ChevronRight className="h-5 w-5" /></button>
-          </div>
-        </div>
-      </main>
+        )}
+      </div>
     </div>
   );
 }

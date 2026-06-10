@@ -1,51 +1,89 @@
 import { Link, Outlet } from 'react-router-dom';
-import { Menu } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import Logo from '../ui/Logo';
+import { useState } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function Layout() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
+
+  const navLinks = [
+    { label: 'Explore', to: '/projects' },
+    { label: 'About', to: '/about' },
+    { label: 'Contact', to: '/contact' },
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col bg-background-light selection:bg-accent-amber/20">
-      <nav className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 justify-between items-center">
-            <Link to="/" className="hover:opacity-90 transition-opacity">
+    <div className="min-h-screen flex flex-col bg-background-light">
+      <nav className="sticky top-0 z-50 w-full border-b border-gray-900/10 bg-background-light/95 backdrop-blur-md">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="flex h-14 justify-between items-center">
+            <Link to="/" className="hover:opacity-80 transition-opacity shrink-0">
               <Logo size="sm" />
             </Link>
             
             <div className="hidden sm:flex sm:gap-6 sm:items-center">
-              <Link to="/projects" className="text-sm font-medium text-gray-700 hover:text-accent-blue transition-colors">
-                Explore
-              </Link>
-              <Link to="/signin" className="text-sm font-medium text-gray-700 hover:text-accent-blue transition-colors">
-                Sign In
-              </Link>
-              <Link to="/signup" className="btn-primary py-2 px-5 text-sm">
-                Get Started
-              </Link>
+              {navLinks.map(link => (
+                <Link key={link.to} to={link.to} className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                  {link.label}
+                </Link>
+              ))}
             </div>
 
-            <div className="sm:hidden flex items-center">
-              <button className="text-gray-500 hover:text-gray-900 p-2">
-                <Menu className="h-6 w-6" />
-              </button>
+            <div className="hidden sm:flex sm:items-center sm:gap-4">
+              {user ? (
+                <>
+                  <Link to="/dashboard" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Dashboard</Link>
+                  <Link to={`/users/${user.user_metadata?.username || 'me'}`} className="w-8 h-8 rounded-full bg-logo-blue/10 flex items-center justify-center text-xs font-bold text-logo-blue ring-1 ring-logo-blue/10">
+                    {(user.user_metadata?.full_name || user.email || 'U').substring(0, 2).toUpperCase()}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/signin" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Sign In</Link>
+                  <Link to="/signup" className="bg-logo-blue text-white hover:bg-blue-800 rounded-full py-1.5 px-5 text-sm font-medium transition-colors">
+                    Get Started
+                  </Link>
+                </>
+              )}
             </div>
+
+            <button className="sm:hidden text-gray-600 hover:text-gray-900 p-1.5" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+        
+        {mobileMenuOpen && (
+          <div className="sm:hidden bg-background-light border-t border-gray-900/10">
+            <div className="px-4 py-4 space-y-2">
+              {navLinks.map(link => (
+                <Link key={link.to} to={link.to} className="block text-sm font-medium text-gray-600 py-2" onClick={() => setMobileMenuOpen(false)}>{link.label}</Link>
+              ))}
+              <hr className="border-gray-900/10 my-2" />
+              {user ? (
+                <Link to="/dashboard" className="block text-sm font-medium text-gray-600 py-2" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+              ) : (
+                <>
+                  <Link to="/signin" className="block text-sm font-medium text-gray-600 py-2" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
+                  <Link to="/signup" className="bg-logo-blue text-white rounded-full block text-center py-2 text-sm font-medium mt-2" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </nav>
 
-      <main className="flex-grow">
+      <main className="flex-grow flex flex-col">
         <Outlet />
       </main>
 
-      <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-          <div className="md:flex md:items-center md:justify-between">
-            <div className="flex justify-center md:justify-start items-center mb-4 md:mb-0">
-              <Logo size="sm" />
-            </div>
-            <p className="text-center text-sm leading-5 text-gray-500 md:text-left">
-              &copy; {new Date().getFullYear()} TriSangum Labs. Where builders find builders.
-            </p>
+      <footer className="border-t border-gray-900/10 mt-auto">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <Logo size="sm" />
+            <p className="text-xs text-gray-400">© {new Date().getFullYear()} TriSangum Labs. Where builders find builders.</p>
           </div>
         </div>
       </footer>

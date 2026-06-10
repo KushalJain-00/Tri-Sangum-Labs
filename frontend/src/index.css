@@ -1,12 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background-light: #F6F4E8; /* Warmer cream from UI reference */
+  --color-background-light: #F6F4E8;
   --color-background-dark: #0E0D0B;
-  --color-accent-blue: #0047b3; /* Logo bright blue */
-  --color-accent-amber: #c76b4b; /* Logo terracotta/orange */
+  --color-accent-blue: #0047b3;
+  --color-accent-amber: #c76b4b;
   
-  /* Specific logo typography colors */
   --color-logo-brown: #3b1d16;
   --color-logo-blue: #0047b3;
   --color-logo-orange: #c76b4b;
@@ -17,9 +16,10 @@
   --radius-pill: 9999px;
   --radius-card: 12px;
 
-  /* Custom animations for the flowing blobs */
   --animate-blob: blob 10s infinite;
   --animate-blob-slow: blob 15s infinite reverse;
+  --animate-fade-in-up: fade-in-up 0.5s ease-out both;
+  --animate-scale-in: scale-in 0.3s ease-out both;
 }
 
 @keyframes blob {
@@ -29,38 +29,63 @@
   100% { transform: translate(0px, 0px) scale(1); }
 }
 
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     background-color: var(--color-background-light);
-    color: var(--color-gray-900);
+    color: #1a1a1a;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    color: var(--color-gray-900);
+    color: #1a1a1a;
   }
+
+  /* Custom scrollbar — subtle, thin */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d1d1c7; border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #b0b0a6; }
+
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center bg-logo-orange px-8 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-90 transition-opacity;
+    @apply inline-flex items-center justify-center bg-logo-blue px-8 py-3 text-sm font-semibold text-white hover:bg-blue-800 transition-colors;
     border-radius: var(--radius-pill);
   }
   
   .btn-secondary {
-    @apply inline-flex items-center justify-center bg-white px-6 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors;
+    @apply inline-flex items-center justify-center bg-white px-6 py-3 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-200 hover:bg-gray-50 transition-colors;
     border-radius: var(--radius-pill);
   }
 
   .input-field {
-    @apply block w-full border-0 py-2.5 px-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-accent-blue sm:text-sm sm:leading-6;
+    @apply block w-full border-0 py-2.5 px-4 text-gray-900 ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-accent-blue sm:text-sm sm:leading-6;
     border-radius: var(--radius-pill);
   }
 
   .card {
-    @apply bg-white shadow-sm ring-1 ring-gray-200 overflow-hidden;
+    @apply bg-white ring-1 ring-gray-200 overflow-hidden;
     border-radius: var(--radius-card);
   }
   
@@ -68,4 +93,26 @@
     @apply inline-flex items-center px-2.5 py-0.5 text-xs font-semibold;
     border-radius: var(--radius-pill);
   }
+
+  /* Skeleton shimmer for loading states */
+  .skeleton {
+    @apply bg-gray-200 rounded-lg animate-pulse;
+  }
+
+  /* Markdown prose overrides */
+  .prose-project h1 { @apply text-2xl font-bold mb-4 mt-6; }
+  .prose-project h2 { @apply text-xl font-bold mb-3 mt-5; }
+  .prose-project h3 { @apply text-lg font-bold mb-2 mt-4; }
+  .prose-project p { @apply mb-4 leading-relaxed; }
+  .prose-project ul { @apply list-disc pl-6 mb-4 space-y-1; }
+  .prose-project ol { @apply list-decimal pl-6 mb-4 space-y-1; }
+  .prose-project code { @apply bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono; }
+  .prose-project pre { @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4 text-sm; }
+  .prose-project pre code { @apply bg-transparent p-0; }
+  .prose-project blockquote { @apply border-l-4 border-logo-blue/30 pl-4 italic text-gray-600 my-4; }
+  .prose-project a { @apply text-logo-blue underline hover:text-blue-800; }
+  .prose-project img { @apply rounded-lg my-4 max-w-full; }
+  .prose-project table { @apply w-full border-collapse my-4; }
+  .prose-project th { @apply text-left p-2 border-b-2 border-gray-200 font-bold text-sm; }
+  .prose-project td { @apply p-2 border-b border-gray-100 text-sm; }
 }
