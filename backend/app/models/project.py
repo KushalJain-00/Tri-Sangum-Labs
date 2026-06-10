@@ -29,6 +29,8 @@ class Project(Base):
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     college: Mapped[str | None] = mapped_column(String(150), nullable=True)
     star_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    upvote_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    comment_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     contributor_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     trending_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
 

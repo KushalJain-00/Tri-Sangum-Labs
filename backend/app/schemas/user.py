@@ -37,6 +37,7 @@ class UserResponse(BaseModel):
     github_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+    reputation: int
 
     model_config = {"from_attributes": True}
 

@@ -49,6 +49,8 @@ class ProjectResponse(BaseModel):
     city: Optional[str] = None
     college: Optional[str] = None
     star_count: int
+    upvote_count: int
+    comment_count: int
     contributor_count: int
     trending_score: float
     created_at: datetime

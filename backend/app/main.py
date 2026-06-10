@@ -63,10 +63,12 @@ app.add_middleware(
 )
 
 # Register routers
-from app.routers import auth, projects, users, contributions, utility
+from app.routers import auth, projects, users, contributions, utility, chat, community
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(projects.router, prefix="/api/v1/projects", tags=["projects"])
+app.include_router(chat.router, prefix="/api/v1/projects", tags=["chat"])
+app.include_router(community.router, prefix="/api/v1/projects", tags=["community"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(contributions.router, prefix="/api/v1/contributions", tags=["contributions"])
 app.include_router(utility.router, prefix="/api/v1", tags=["utility"])
