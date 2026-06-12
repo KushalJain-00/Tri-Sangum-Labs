@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import String, Text, Integer, ForeignKey
+from sqlalchemy import Text, Integer, ForeignKey, DateTime, UniqueConstraint, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,11 +24,17 @@ class ProjectUpvote(Base):
     value: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     
     created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
     )
 
     user = relationship("User")
     project = relationship("Project")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "project_id", name="uq_project_upvote_user_project"),
+        Index("idx_project_upvotes_project", "project_id"),
+        Index("idx_project_upvotes_user", "user_id"),
+    )
 
 
 class ProjectComment(Base):
@@ -50,9 +56,10 @@ class ProjectComment(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     
     created_at: Mapped[datetime] = mapped_column(
-        nullable=False, default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
     )
     updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
@@ -60,5 +67,8 @@ class ProjectComment(Base):
 
     user = relationship("User")
     project = relationship("Project")
-    # To load replies easily, though not strictly required if we flat-fetch and build tree in frontend
-    replies = relationship("ProjectComment", backref="parent", cascade="all, delete-orphan", remote_side=[id])
+    __table_args__ = (
+        Index("idx_project_comments_project", "project_id"),
+        Index("idx_project_comments_user", "user_id"),
+        Index("idx_project_comments_parent", "parent_id"),
+    )

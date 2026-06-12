@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Code, Users, Rocket, ArrowRight, Sun, Menu, X } from 'lucide-react';
+import { BriefcaseBusiness, Building2, Code, MessageSquare, Rocket, ArrowRight, Menu, Users, X } from 'lucide-react';
 import Logo from '../components/ui/Logo';
 
 export default function HomePage() {
@@ -15,8 +15,38 @@ export default function HomePage() {
 
   const navLinks = [
     { label: 'Projects', to: '/projects' },
+    { label: 'Community', to: '/community' },
+    { label: 'Teams', to: '/teams' },
+    { label: 'Freelance', to: '/freelance' },
+    { label: 'Hiring', to: '/hiring' },
     { label: 'About', to: '/about' },
-    { label: 'Contact Us', to: '/contact' },
+  ];
+
+  const pillars = [
+    {
+      icon: Code,
+      title: 'Projects',
+      copy: 'Open source, hiring, freelance, stealth, and team projects with GitHub context at the center.',
+      to: '/projects',
+    },
+    {
+      icon: MessageSquare,
+      title: 'Community',
+      copy: 'Technical Q&A, build logs, and useful discussions tied to real builder work.',
+      to: '/community',
+    },
+    {
+      icon: Building2,
+      title: 'Teams',
+      copy: 'Create teams, recruit contributors, and make organization portfolios visible.',
+      to: '/teams',
+    },
+    {
+      icon: BriefcaseBusiness,
+      title: 'Freelance + Hiring',
+      copy: 'Scoped work and startup roles where applicants are judged by proof, not polish.',
+      to: '/freelance',
+    },
   ];
 
   return (
@@ -36,7 +66,7 @@ export default function HomePage() {
               <Logo size="sm" />
             </Link>
 
-            <div className="hidden md:flex items-center gap-8">
+            <div className="hidden lg:flex items-center gap-6">
               {navLinks.map((link) => (
                 <Link
                   key={link.to}
@@ -90,11 +120,11 @@ export default function HomePage() {
           </div>
 
           <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-gray-900 mb-6 leading-[1.15] tracking-tight">
-            Where builders <br className="hidden sm:block" />find builders.
+            A network for people who build, not just post.
           </h1>
           
           <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
-            Post your project. Find collaborators. Build together. A project-first platform for India's most ambitious creators.
+            Projects, teams, community, freelance work, and hiring, all centered around real proof of building.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -111,6 +141,22 @@ export default function HomePage() {
               Post a Project
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Platform pillars */}
+      <section className="px-6 pb-20">
+        <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-gray-200 rounded-xl overflow-hidden ring-1 ring-gray-200">
+          {pillars.map((pillar) => {
+            const Icon = pillar.icon;
+            return (
+              <Link key={pillar.title} to={pillar.to} className="bg-background-light p-7 hover:bg-white transition-colors group">
+                <Icon className="h-6 w-6 text-logo-blue mb-5" />
+                <h2 className="font-display font-bold text-2xl text-gray-900 mb-2 group-hover:text-logo-blue transition-colors">{pillar.title}</h2>
+                <p className="text-sm text-gray-600 leading-relaxed">{pillar.copy}</p>
+              </Link>
+            );
+          })}
         </div>
       </section>
 

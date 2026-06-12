@@ -10,7 +10,7 @@ const fetchMessages = async ({ queryKey }) => {
   try {
     const { data } = await api.get(`/api/v1/projects/${projectId}/messages`);
     return data.messages || [];
-  } catch (error) {
+  } catch {
     // If backend is unreachable or user is unauthorized (403), return empty
     return [];
   }

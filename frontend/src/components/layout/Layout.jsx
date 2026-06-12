@@ -7,11 +7,16 @@ import { useAuth } from '../../hooks/useAuth';
 export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
+  const displayName = user?.full_name || user?.user_metadata?.full_name || user?.email || 'Builder';
+  const username = user?.username || user?.user_metadata?.username || 'me';
 
   const navLinks = [
-    { label: 'Explore', to: '/projects' },
+    { label: 'Projects', to: '/projects' },
+    { label: 'Community', to: '/community' },
+    { label: 'Teams', to: '/teams' },
+    { label: 'Freelance', to: '/freelance' },
+    { label: 'Hiring', to: '/hiring' },
     { label: 'About', to: '/about' },
-    { label: 'Contact', to: '/contact' },
   ];
 
   return (
@@ -23,7 +28,7 @@ export default function Layout() {
               <Logo size="sm" />
             </Link>
             
-            <div className="hidden sm:flex sm:gap-6 sm:items-center">
+            <div className="hidden lg:flex lg:gap-5 lg:items-center">
               {navLinks.map(link => (
                 <Link key={link.to} to={link.to} className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
                   {link.label}
@@ -35,8 +40,8 @@ export default function Layout() {
               {user ? (
                 <>
                   <Link to="/dashboard" className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Dashboard</Link>
-                  <Link to={`/users/${user.user_metadata?.username || 'me'}`} className="w-8 h-8 rounded-full bg-logo-blue/10 flex items-center justify-center text-xs font-bold text-logo-blue ring-1 ring-logo-blue/10">
-                    {(user.user_metadata?.full_name || user.email || 'U').substring(0, 2).toUpperCase()}
+                  <Link to={`/users/${username}`} className="w-8 h-8 rounded-full bg-logo-blue/10 flex items-center justify-center text-xs font-bold text-logo-blue ring-1 ring-logo-blue/10">
+                    {displayName.substring(0, 2).toUpperCase()}
                   </Link>
                 </>
               ) : (
