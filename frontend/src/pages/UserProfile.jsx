@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { MapPin, GraduationCap, Clock, FolderGit2, Calendar } from 'lucide-react';
+import { MapPin, GraduationCap, FolderGit2, Calendar } from 'lucide-react';
 import api from '../lib/api';
 
 const fetchUserProfile = async ({ queryKey }) => {
@@ -8,7 +8,7 @@ const fetchUserProfile = async ({ queryKey }) => {
   try {
     const { data } = await api.get(`/api/v1/users/${username}`);
     return data;
-  } catch (error) {
+  } catch {
     console.warn("Backend unreachable, returning placeholder profile.");
     return {
       user: {
@@ -108,7 +108,7 @@ export default function UserProfile() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {profile.projects.map((project, i) => (
+                  {profile.projects.map((project) => (
                     <Link to={`/projects/${project.id}`} key={project.id} className="bg-white/80 backdrop-blur-md rounded-[24px] p-7 ring-1 ring-gray-900/5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgb(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-500 ease-out flex flex-col group">
                       <div className="flex justify-between items-start mb-5">
                         <span className="px-3 py-1.5 bg-logo-blue/5 text-logo-blue text-[10px] font-bold uppercase tracking-widest rounded-full ring-1 ring-logo-blue/10">

@@ -52,8 +52,4 @@ def _get_service_key() -> str:
     """Get the Supabase anon key for server-side auth calls.
     Note: We use the JWT secret for verification but the service/anon key
     for making API calls to Supabase Auth endpoints."""
-    # For server-side calls, we need the service role key or anon key.
-    # In production, this should be the service_role key set as env var.
-    # For now, we'll extract from SUPABASE_URL or use a separate env var.
-    import os
-    return os.getenv("SUPABASE_SERVICE_ROLE_KEY", os.getenv("SUPABASE_ANON_KEY", ""))
+    return settings.SUPABASE_SERVICE_ROLE_KEY or settings.SUPABASE_ANON_KEY

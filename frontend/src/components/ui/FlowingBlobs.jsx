@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function FlowingBlobs({ className = '' }) {
   return (
     <div className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}>

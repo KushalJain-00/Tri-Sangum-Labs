@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function Logo({ size = 'md', stacked = false }) {
   // Base sizing logic
   const baseSize = {

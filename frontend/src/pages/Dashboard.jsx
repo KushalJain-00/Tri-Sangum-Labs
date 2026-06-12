@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Plus, Clock, X, Check, ChevronUp } from 'lucide-react';
+import { Plus, X, Check, ChevronUp } from 'lucide-react';
 import PostProjectModal from '../components/PostProjectModal';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import api from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 
@@ -10,7 +11,7 @@ const fetchDashboard = async () => {
   try {
     const { data } = await api.get('/api/v1/users/me/dashboard');
     return data;
-  } catch (error) {
+  } catch {
     return { projects: [], incoming_requests: [], outgoing_requests: [] };
   }
 };
@@ -28,6 +29,7 @@ function timeAgo(dateStr) {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('projects');
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
@@ -41,11 +43,34 @@ export default function Dashboard() {
   const incoming = dashboard?.incoming_requests || [];
   const outgoing = dashboard?.outgoing_requests || [];
 
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }) => api.put(`/api/v1/contributions/${id}`, { status }),
+    onSuccess: () => {
+      toast.success('Request updated.');
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || 'Could not update the request.');
+    },
+  });
+
   const tabs = [
     { id: 'projects', label: 'My Projects', count: projects.length },
     { id: 'incoming', label: 'Incoming', count: incoming.length },
     { id: 'outgoing', label: 'Sent', count: outgoing.length },
   ];
+
+  if (!user) {
+    return (
+      <div className="min-h-[calc(100vh-5rem)] bg-background-light flex items-center justify-center px-4">
+        <div className="max-w-md text-center">
+          <h1 className="text-3xl font-display font-bold text-gray-900 mb-3">Sign in to manage your builds.</h1>
+          <p className="text-sm text-gray-500 mb-6">Your dashboard shows projects, incoming contributor requests, outgoing applications, and team activity.</p>
+          <Link to="/signin" className="btn-primary">Sign In</Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-background-light">
@@ -162,10 +187,18 @@ export default function Dashboard() {
                         </div>
                         {req.status === 'pending' ? (
                           <div className="flex gap-2 shrink-0">
-                            <button className="p-2 text-red-500 hover:bg-red-50 rounded-full ring-1 ring-red-200 transition-colors">
+                            <button
+                              onClick={() => statusMutation.mutate({ id: req.id, status: 'declined' })}
+                              disabled={statusMutation.isPending}
+                              className="p-2 text-red-500 hover:bg-red-50 rounded-full ring-1 ring-red-200 transition-colors disabled:opacity-50"
+                            >
                               <X className="h-4 w-4" />
                             </button>
-                            <button className="p-2 text-green-600 hover:bg-green-50 rounded-full ring-1 ring-green-200 transition-colors">
+                            <button
+                              onClick={() => statusMutation.mutate({ id: req.id, status: 'accepted' })}
+                              disabled={statusMutation.isPending}
+                              className="p-2 text-green-600 hover:bg-green-50 rounded-full ring-1 ring-green-200 transition-colors disabled:opacity-50"
+                            >
                               <Check className="h-4 w-4" />
                             </button>
                           </div>

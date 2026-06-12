@@ -1,20 +1,59 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, ChevronUp, ChevronDown, MessageSquare, Clock, User, TrendingUp, Flame, Sparkles } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown, MessageSquare, Clock, TrendingUp, Flame, Sparkles } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../lib/api';
 
+const sampleProjects = [
+  {
+    id: 'demo-open-source',
+    title: 'TriSangum Labs Core',
+    description: 'A project-first developer collaboration platform with FastAPI, React, Postgres, and GitHub-aware project pages.',
+    type: 'open_source',
+    category: 'software',
+    tags: ['react', 'fastapi', 'postgres', 'github'],
+    upvote_count: 128,
+    comment_count: 24,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+  },
+  {
+    id: 'demo-hiring',
+    title: 'AI crop disease scanner for rural clinics',
+    description: 'Hiring a mobile developer to help ship an offline-first Android app around an existing ML model.',
+    type: 'hiring',
+    category: 'ml',
+    tags: ['pytorch', 'android', 'healthtech'],
+    upvote_count: 92,
+    comment_count: 11,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 18).toISOString(),
+  },
+  {
+    id: 'demo-freelance',
+    title: 'Freelance dashboard for a robotics lab',
+    description: 'Need a scoped telemetry dashboard with charts, device status, and project documentation.',
+    type: 'freelance',
+    category: 'hardware',
+    tags: ['react', 'websocket', 'robotics'],
+    upvote_count: 64,
+    comment_count: 8,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
+  },
+];
+
 const fetchProjects = async ({ queryKey }) => {
-  const [, { search, sort }] = queryKey;
+  const [, { search, sort, type }] = queryKey;
   const sortMap = { 'Top': 'trending', 'New': 'latest', 'Trending': 'month' };
   try {
     const { data } = await api.get('/api/v1/projects', {
-      params: { search: search || undefined, sort: sortMap[sort] || 'latest' }
+      params: {
+        search: search || undefined,
+        type: type !== 'all' ? type : undefined,
+        sort: sortMap[sort] || 'latest',
+      }
     });
-    return data.projects || [];
-  } catch (error) {
-    console.warn("Backend unreachable, returning empty projects.");
-    return [];
+    return data.projects?.length ? data.projects : sampleProjects;
+  } catch {
+    return sampleProjects;
   }
 };
 
@@ -22,6 +61,14 @@ const TABS = [
   { id: 'Top', icon: Flame, label: 'Top' },
   { id: 'New', icon: Sparkles, label: 'New' },
   { id: 'Trending', icon: TrendingUp, label: 'Trending' },
+];
+
+const TYPE_FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'open_source', label: 'Open Source' },
+  { id: 'hiring', label: 'Hiring' },
+  { id: 'freelance', label: 'Freelance' },
+  { id: 'closed', label: 'Private' },
 ];
 
 function timeAgo(dateStr) {
@@ -39,11 +86,14 @@ function timeAgo(dateStr) {
 export default function ProjectFeed() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('New');
+  const [activeType, setActiveType] = useState('all');
 
   const { data: projects = [], isLoading } = useQuery({
-    queryKey: ['projects', { search: searchQuery, sort: activeTab }],
+    queryKey: ['projects', { search: searchQuery, sort: activeTab, type: activeType }],
     queryFn: fetchProjects,
   });
+
+  const visibleProjects = projects.filter((project) => activeType === 'all' || project.type === activeType);
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-background-light">
@@ -52,7 +102,7 @@ export default function ProjectFeed() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-display font-bold text-gray-900 tracking-tight mb-1">Projects</h1>
-          <p className="text-gray-500 text-sm">Discover what people are building, or post your own.</p>
+          <p className="text-gray-500 text-sm">Open source, hiring, freelance, private builds, and startup work in one feed.</p>
         </div>
 
         {/* Search */}
@@ -88,6 +138,22 @@ export default function ProjectFeed() {
           })}
         </div>
 
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-3 mb-3">
+          {TYPE_FILTERS.map((filter) => (
+            <button
+              key={filter.id}
+              onClick={() => setActiveType(filter.id)}
+              className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                activeType === filter.id
+                  ? 'bg-logo-blue text-white'
+                  : 'bg-white text-gray-500 ring-1 ring-gray-200 hover:text-gray-900'
+              }`}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+
         {/* Feed */}
         {isLoading ? (
           <div className="space-y-4">
@@ -109,13 +175,13 @@ export default function ProjectFeed() {
               </div>
             ))}
           </div>
-        ) : projects.length === 0 ? (
+        ) : visibleProjects.length === 0 ? (
           <div className="text-center py-20 border border-dashed border-gray-300 rounded-xl">
             <p className="text-gray-500 text-sm">No projects found. Try a different search or filter.</p>
           </div>
         ) : (
           <div className="bg-white rounded-xl ring-1 ring-gray-200 divide-y divide-gray-100 overflow-hidden">
-            {projects.map((project, i) => (
+            {visibleProjects.map((project) => (
               <div key={project.id} className="flex items-start gap-4 p-4 hover:bg-gray-50/50 transition-colors group">
                 
                 {/* Vote column */}

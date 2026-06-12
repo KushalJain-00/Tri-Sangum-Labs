@@ -1,8 +1,37 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import api from '../lib/api';
 
-export default function ContributeModal({ isOpen, onClose, projectTitle }) {
+export default function ContributeModal({ isOpen, onClose, projectId, projectTitle }) {
   const [message, setMessage] = useState('');
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post(`/api/v1/projects/${projectId}/contribute`, { message });
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Contribution request sent.');
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      setMessage('');
+      onClose();
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.detail || 'Could not send the request.');
+    },
+  });
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (message.trim().length < 20) {
+      toast.error('Write at least 20 characters so the owner has context.');
+      return;
+    }
+    mutation.mutate();
+  };
 
   if (!isOpen) return null;
 
@@ -18,7 +47,7 @@ export default function ContributeModal({ isOpen, onClose, projectTitle }) {
           </button>
         </div>
         
-        <form className="p-6">
+        <form className="p-6" onSubmit={handleSubmit}>
           <p className="text-gray-600 mb-6">
             Tell the owner how you can help. Mention your relevant skills, past experience, or what specifically interests you about the project.
           </p>
@@ -39,7 +68,10 @@ export default function ContributeModal({ isOpen, onClose, projectTitle }) {
 
           <div className="flex justify-end gap-3">
             <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
-            <button type="submit" className="btn-primary">Send Request</button>
+            <button type="submit" disabled={mutation.isPending} className="btn-primary">
+              {mutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Send Request
+            </button>
           </div>
         </form>
       </div>

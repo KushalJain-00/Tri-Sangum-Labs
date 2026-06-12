@@ -11,6 +11,7 @@ from app.schemas.project import (
     ProjectCreate, ProjectUpdate, ProjectStatusUpdate,
     ProjectResponse, ProjectListResponse, StarResponse, TrendingTagsResponse,
 )
+from app.schemas.contribution import ContributionCreate, ContributionResponse
 from app.schemas.user import UserResponse
 from app.services import project_service
 
@@ -147,7 +148,6 @@ async def contribute_to_project(
     db: AsyncSession = Depends(get_db),
 ):
     """POST /api/v1/projects/:id/contribute — express interest."""
-    from app.schemas.contribution import ContributionCreate, ContributionResponse
     from app.services import contribution_service, email_service
 
     # Verify project exists

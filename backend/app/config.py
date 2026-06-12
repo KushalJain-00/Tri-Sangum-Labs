@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     # Supabase Auth
     SUPABASE_URL: str
     SUPABASE_JWT_SECRET: str
+    SUPABASE_ANON_KEY: str = ""
+    SUPABASE_SERVICE_ROLE_KEY: str = ""
 
     # Cloudinary
     CLOUDINARY_CLOUD_NAME: str = ""
@@ -28,6 +30,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"
 
 
 settings = Settings()

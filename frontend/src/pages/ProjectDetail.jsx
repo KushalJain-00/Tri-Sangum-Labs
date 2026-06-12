@@ -6,15 +6,15 @@ import ProjectChat from '../components/ProjectChat';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import toast from 'react-hot-toast';
 import api from '../lib/api';
-import { useAuth } from '../hooks/useAuth';
 
 const fetchProject = async ({ queryKey }) => {
   const [, id] = queryKey;
   try {
     const { data } = await api.get(`/api/v1/projects/${id}`);
     return data;
-  } catch (error) {
+  } catch {
     return {
       id,
       title: 'TriSangum Labs Core',
@@ -63,7 +63,6 @@ function timeAgo(dateStr) {
 export default function ProjectDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isContributeOpen, setIsContributeOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -84,6 +83,18 @@ export default function ProjectDetail() {
       queryClient.invalidateQueries({ queryKey: ['comments', id] });
       setCommentText('');
     },
+  });
+
+  const voteMutation = useMutation({
+    mutationFn: (value) => api.post(`/api/v1/projects/${id}/vote`, { value }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['project', id] }),
+    onError: (error) => toast.error(error.response?.data?.detail || 'Sign in to vote.'),
+  });
+
+  const starMutation = useMutation({
+    mutationFn: () => api.post(`/api/v1/projects/${id}/star`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['project', id] }),
+    onError: (error) => toast.error(error.response?.data?.detail || 'Sign in to star this project.'),
   });
 
   if (isLoading) {
@@ -174,10 +185,10 @@ export default function ProjectDetail() {
 
             {/* Actions */}
             <div className="flex items-center gap-3 border-y border-gray-200 py-3">
-              <button className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-logo-blue px-3 py-1.5 rounded-full hover:bg-logo-blue/5 transition-all">
+              <button onClick={() => voteMutation.mutate(1)} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-logo-blue px-3 py-1.5 rounded-full hover:bg-logo-blue/5 transition-all">
                 <ChevronUp className="h-4 w-4" /> Upvote
               </button>
-              <button className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-amber-600 px-3 py-1.5 rounded-full hover:bg-amber-50 transition-all">
+              <button onClick={() => starMutation.mutate()} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-amber-600 px-3 py-1.5 rounded-full hover:bg-amber-50 transition-all">
                 <Star className="h-4 w-4" /> Star <span className="text-gray-400">{project.star_count || 0}</span>
               </button>
               <button className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-full hover:bg-gray-100 transition-all">
@@ -291,6 +302,37 @@ export default function ProjectDetail() {
               </div>
             </div>
 
+            {/* GitHub Snapshot */}
+            {project.repo_url && (
+              <div className="border-t border-gray-200 pt-8">
+                <h3 className="text-lg font-display font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Code className="h-5 w-5 text-gray-400" />
+                  GitHub Snapshot
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    { label: 'Branches', value: 'main, dev, feature/auth' },
+                    { label: 'Open Issues', value: '12 issues need contributors' },
+                    { label: 'Pull Requests', value: '4 PRs under review' },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-xl bg-white p-4 ring-1 ring-gray-200">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">{item.label}</p>
+                      <p className="text-sm font-semibold text-gray-800 leading-relaxed">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 rounded-xl bg-gray-950 p-4 text-sm text-gray-200 font-mono overflow-x-auto">
+                  <div>src/</div>
+                  <div className="pl-4">components/</div>
+                  <div className="pl-4">pages/</div>
+                  <div>backend/</div>
+                  <div className="pl-4">app/routers/</div>
+                  <div className="pl-4">app/services/</div>
+                  <div>README.md</div>
+                </div>
+              </div>
+            )}
+
             {/* Team Chat */}
             <div className="border-t border-gray-200 pt-8">
               <ProjectChat projectId={id} />
@@ -336,11 +378,9 @@ export default function ProjectDetail() {
                 <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">{project.contributor_count || 3}</span>
               </h3>
               <div className="flex -space-x-2">
-                {['logo-blue', 'logo-orange', 'logo-brown'].slice(0, project.contributor_count || 3).map((color, i) => (
-                  <div key={i} className={`h-9 w-9 rounded-full bg-${color}/10 border-2 border-white flex items-center justify-center text-xs font-bold text-${color} ring-1 ring-gray-200`}>
-                    U{i + 1}
-                  </div>
-                ))}
+                <div className="h-9 w-9 rounded-full bg-logo-blue/10 border-2 border-white flex items-center justify-center text-xs font-bold text-logo-blue ring-1 ring-gray-200">U1</div>
+                <div className="h-9 w-9 rounded-full bg-logo-orange/10 border-2 border-white flex items-center justify-center text-xs font-bold text-logo-orange ring-1 ring-gray-200">U2</div>
+                <div className="h-9 w-9 rounded-full bg-logo-brown/10 border-2 border-white flex items-center justify-center text-xs font-bold text-logo-brown ring-1 ring-gray-200">U3</div>
               </div>
             </div>
           </div>
@@ -349,6 +389,7 @@ export default function ProjectDetail() {
         <ContributeModal 
           isOpen={isContributeOpen} 
           onClose={() => setIsContributeOpen(false)} 
+          projectId={project.id}
           projectTitle={project.title} 
         />
       </div>
